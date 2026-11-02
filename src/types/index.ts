@@ -21,7 +21,10 @@ export interface User {
   avatar: string;
   rating?: number;
   walletBalance: number;
-  loyaltyTier: 'Silver' | 'Gold' | 'Platinum';
+  bonusBalance: number;
+  isPremium: boolean;
+  ordersCompletedCount: number;
+  loyaltyTier: 'Regular' | 'Silver' | 'Gold' | 'Platinum';
   loyaltyPoints: number;
   referralCode: string;
   address?: Address;
@@ -136,6 +139,9 @@ export interface PricingBreakdown {
   difficultyFee: number;
   subtotal: number;
   discount: number;
+  welcomeDiscount?: number;
+  bonusDeduction?: number;
+  cashOrWalletPayable?: number;
   platformFee: number;
   tax: number; // 18% GST
   total: number;

@@ -8,6 +8,7 @@ import {
   NotificationItem,
   DocumentVerificationItem,
 } from '@/types';
+import { calculateTopUpBonus, getTierETA } from '@/utils/pricingAndTiers';
 import {
   MOCK_PROVIDERS,
   MOCK_ACTIVE_BOOKING,
@@ -85,6 +86,12 @@ interface AppContextType {
   
   // Wallet
   addFundsToWallet: (amount: number) => void;
+  calculateTopUpBonus: (amount: number) => number;
+  
+  // Premium Membership & VIP Onboarding
+  isPremiumModalOpen: boolean;
+  setIsPremiumModalOpen: (open: boolean) => void;
+  upgradeToPremium: () => void;
   
   // City Availability
   isCityUnavailableModalOpen: boolean;
@@ -107,10 +114,13 @@ const defaultUserCustomer: User = {
   phone: '+91 98700 88210',
   role: 'customer',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-  walletBalance: 4850,
-  loyaltyTier: 'Platinum',
-  loyaltyPoints: 3420,
-  referralCode: 'AARAV-VIP',
+  walletBalance: 0,
+  bonusBalance: 0,
+  isPremium: false,
+  ordersCompletedCount: 0,
+  loyaltyTier: 'Regular',
+  loyaltyPoints: 0,
+  referralCode: 'AARAV-HOME',
   address: {
     id: 'addr-1',
     label: 'Home',
@@ -133,6 +143,9 @@ const defaultUserProvider: User = {
   avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
   rating: 4.98,
   walletBalance: 28450,
+  bonusBalance: 0,
+  isPremium: true,
+  ordersCompletedCount: 350,
   loyaltyTier: 'Platinum',
   loyaltyPoints: 8900,
   referralCode: 'VIKRAM-PRO',
@@ -146,6 +159,9 @@ const defaultUserAdmin: User = {
   role: 'admin',
   avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
   walletBalance: 1250000,
+  bonusBalance: 0,
+  isPremium: true,
+  ordersCompletedCount: 5000,
   loyaltyTier: 'Platinum',
   loyaltyPoints: 50000,
   referralCode: 'ADMIN-MASTER',
@@ -186,6 +202,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState<boolean>(false);
   const [selectedCategoryDetail, setSelectedCategoryDetail] = useState<ServiceCategory | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState<boolean>(false);
   
   // Verification Queue
   const [verificationQueue, setVerificationQueue] = useState<DocumentVerificationItem[]>(VERIFICATION_QUEUE_DATA);
@@ -211,23 +228,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Restore persisted login session from localStorage on mount
+  // Restore persisted login session and customer profile from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedAuth = localStorage.getItem('homeease_customer_logged_in');
       if (savedAuth === 'true') {
         setIsCustomerLoggedIn(true);
       }
+      const savedProfile = localStorage.getItem('homeease_customer_profile');
+      if (savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          setCustomerProfile(parsed);
+          setCurrentUser(parsed);
+        } catch (err) {
+          console.error('Failed to parse cached customer profile', err);
+        }
+      }
     }
   }, []);
 
   const loginAsCustomer = (details?: Partial<User>) => {
-    const updated = { ...customerProfile, ...details, role: 'customer' as const };
+    const updated: User = {
+      ...customerProfile,
+      ...details,
+      role: 'customer' as const,
+      bonusBalance: details?.bonusBalance ?? customerProfile.bonusBalance ?? 0,
+      isPremium: details?.isPremium ?? customerProfile.isPremium ?? false,
+      ordersCompletedCount: details?.ordersCompletedCount ?? customerProfile.ordersCompletedCount ?? 0,
+      loyaltyTier: details?.loyaltyTier ?? customerProfile.loyaltyTier ?? 'Regular',
+    };
     setCustomerProfile(updated);
     setCurrentUser(updated);
     setIsCustomerLoggedIn(true);
     if (typeof window !== 'undefined') {
       localStorage.setItem('homeease_customer_logged_in', 'true');
+      localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
     }
     setActivePersona('customer');
   };
@@ -403,19 +439,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addFundsToWallet = (amount: number) => {
     if (!currentUser) return;
-    const updated = {
+    const bonus = calculateTopUpBonus(amount);
+    const updated: User = {
       ...currentUser,
       walletBalance: currentUser.walletBalance + amount,
+      bonusBalance: (currentUser.bonusBalance || 0) + bonus,
     };
     setCurrentUser(updated);
     if (currentUser.role === 'customer') {
       setCustomerProfile(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
+      }
     } else if (currentUser.role === 'provider') {
       setProviderProfile(updated);
     }
   };
 
+  const upgradeToPremium = () => {
+    if (!currentUser) return;
+    const updated: User = {
+      ...currentUser,
+      isPremium: true,
+      bonusBalance: (currentUser.bonusBalance || 0) + 500,
+      loyaltyTier: currentUser.loyaltyTier === 'Regular' ? 'Silver' : currentUser.loyaltyTier,
+      loyaltyPoints: Math.max(currentUser.loyaltyPoints || 0, 500),
+    };
+    setCurrentUser(updated);
+    if (currentUser.role === 'customer') {
+      setCustomerProfile(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
+      }
+    }
+    setIsPremiumModalOpen(false);
+  };
+
   const triggerInstantBooking = (serviceName: string, category: string, price: number) => {
+    const tierETA = getTierETA(currentUser?.loyaltyTier || 'Regular');
     const newBooking: Booking = {
       id: `HE-BK-${Math.floor(10000 + Math.random() * 90000)}`,
       serviceId: `inst-${Date.now()}`,
@@ -444,7 +505,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         destLat: 19.0176,
         destLng: 72.8177,
         distanceRemainingKm: 2.1,
-        etaMinutes: 7,
+        etaMinutes: tierETA,
         currentSpeedKmH: 34,
         routeProgressPercent: 15,
         lastUpdated: 'Just dispatched',
@@ -462,7 +523,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
       title: 'Provider Dispatched!',
-      message: `${newBooking.provider?.name} is en route for ${serviceName}. ETA: 7 mins.`,
+      message: `${newBooking.provider?.name} is en route for ${serviceName}. Priority ETA: ${tierETA} mins (${currentUser?.loyaltyTier || 'Regular'} Tier).`,
       time: 'Just now',
       read: false,
       type: 'booking',
@@ -525,6 +586,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         verificationQueue,
         updateVerificationStatus,
         addFundsToWallet,
+        calculateTopUpBonus,
+        isPremiumModalOpen,
+        setIsPremiumModalOpen,
+        upgradeToPremium,
         triggerInstantBooking,
       }}
     >
