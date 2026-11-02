@@ -9,6 +9,7 @@ import {
   DocumentVerificationItem,
 } from '@/types';
 import { calculateTopUpBonus, getTierETA } from '@/utils/pricingAndTiers';
+import { fetchCloudProfile, syncCloudProfile, saveCloudBooking } from '@/utils/supabase';
 import {
   MOCK_PROVIDERS,
   MOCK_ACTIVE_BOOKING,
@@ -243,6 +244,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const parsed = JSON.parse(savedProfile);
           setCustomerProfile(parsed);
           setCurrentUser(parsed);
+          // Sync with Supabase cloud database
+          if (parsed.email || parsed.phone) {
+            fetchCloudProfile(parsed.email || parsed.phone).then((cloud) => {
+              if (cloud) {
+                const merged: User = {
+                  ...parsed,
+                  walletBalance: cloud.wallet_balance !== undefined ? Number(cloud.wallet_balance) : parsed.walletBalance,
+                  bonusBalance: cloud.bonus_balance !== undefined ? Number(cloud.bonus_balance) : parsed.bonusBalance,
+                  isPremium: cloud.is_premium ?? parsed.isPremium,
+                  loyaltyTier: (cloud.loyalty_tier as 'Regular' | 'Silver' | 'Gold' | 'Platinum') || parsed.loyaltyTier,
+                  ordersCompletedCount: cloud.orders_completed_count ?? parsed.ordersCompletedCount,
+                };
+                setCustomerProfile(merged);
+                setCurrentUser(merged);
+                localStorage.setItem('homeease_customer_profile', JSON.stringify(merged));
+              }
+            }).catch(() => {});
+          }
         } catch (err) {
           console.error('Failed to parse cached customer profile', err);
         }
@@ -267,6 +286,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('homeease_customer_logged_in', 'true');
       localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
     }
+    // Sync profile to Supabase cloud
+    syncCloudProfile({
+      name: updated.name,
+      email: updated.email,
+      phone: updated.phone,
+      role: 'customer',
+      wallet_balance: updated.walletBalance,
+      bonus_balance: updated.bonusBalance,
+      is_premium: updated.isPremium,
+      loyalty_tier: updated.loyaltyTier,
+      orders_completed_count: updated.ordersCompletedCount,
+    });
     setActivePersona('customer');
   };
 
@@ -458,6 +489,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else if (currentUser.role === 'provider') {
       setProviderProfile(updated);
     }
+    // Sync updated wallet balance to Supabase
+    syncCloudProfile({
+      email: updated.email,
+      phone: updated.phone,
+      wallet_balance: updated.walletBalance,
+      bonus_balance: updated.bonusBalance,
+    });
   };
 
   const upgradeToPremium = () => {
@@ -540,6 +578,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
       }
     }
+
+    // Sync updated loyalty tier and points to Supabase
+    syncCloudProfile({
+      email: updated.email,
+      phone: updated.phone,
+      wallet_balance: updated.walletBalance,
+      bonus_balance: updated.bonusBalance,
+      loyalty_tier: updated.loyaltyTier,
+      orders_completed_count: updated.ordersCompletedCount,
+    });
   };
 
   const triggerInstantBooking = (serviceName: string, category: string, price: number) => {
@@ -585,6 +633,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveBooking(newBooking);
     setIsTrackingActive(true);
     setIsBookingModalOpen(false);
+
+    // Persist to Supabase cloud
+    saveCloudBooking({
+      id: newBooking.id,
+      service_name: serviceName,
+      category_name: category,
+      customer_name: newBooking.customerName,
+      customer_phone: newBooking.customerPhone,
+      address: newBooking.address,
+      price: newBooking.pricing.total,
+      status: 'confirmed',
+      payment_method: 'UPI',
+      payment_status: 'paid',
+    });
 
     // Add notification
     const newNotif: NotificationItem = {
