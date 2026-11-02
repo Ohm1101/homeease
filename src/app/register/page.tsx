@@ -21,10 +21,11 @@ import {
   Zap,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import PremiumUpgradeModal from '@/components/modals/PremiumUpgradeModal';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { loginAsCustomer, loginAsProvider, theme, toggleTheme, supportedCities } = useApp();
+  const { loginAsCustomer, loginAsProvider, theme, toggleTheme, supportedCities, setIsPremiumModalOpen } = useApp();
 
   const [role, setRole] = useState<'customer' | 'provider'>('customer');
   const [name, setName] = useState('');
@@ -57,6 +58,12 @@ export default function RegisterPage() {
           name: name || 'Aarav Singhania',
           email: email || 'client@homeease.in',
           phone: phone || '+91 98700 88210',
+          walletBalance: 0,
+          bonusBalance: 0,
+          isPremium: false,
+          ordersCompletedCount: 0,
+          loyaltyTier: 'Regular',
+          loyaltyPoints: 0,
           address: {
             id: 'addr-new',
             label: 'Home',
@@ -69,6 +76,7 @@ export default function RegisterPage() {
             isDefault: true,
           },
         });
+        setIsPremiumModalOpen(true);
         setIsSubmitting(false);
         router.push('/#customer-dashboard');
       } else {
@@ -96,7 +104,15 @@ export default function RegisterPage() {
       } catch (err) {}
 
       if (role === 'customer') {
-        loginAsCustomer();
+        loginAsCustomer({
+          walletBalance: 0,
+          bonusBalance: 0,
+          isPremium: false,
+          ordersCompletedCount: 0,
+          loyaltyTier: 'Regular',
+          loyaltyPoints: 0,
+        });
+        setIsPremiumModalOpen(true);
         router.push('/#customer-dashboard');
       } else {
         loginAsProvider();
@@ -402,6 +418,9 @@ export default function RegisterPage() {
         </Link>
         <span>256-Bit SSL Encrypted Registration Session</span>
       </footer>
+
+      {/* VIP PREMIUM ONBOARDING MODAL */}
+      <PremiumUpgradeModal />
     </main>
   );
 }

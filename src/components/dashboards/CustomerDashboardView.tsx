@@ -31,6 +31,7 @@ import {
   Truck,
   Award,
   Sparkles,
+  Crown,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { MOCK_PROVIDERS, SERVICE_CATEGORIES } from '@/data/mockData';
@@ -45,6 +46,8 @@ export default function CustomerDashboardView() {
     addFundsToWallet,
     openBookingModal,
     selectedCity,
+    setIsPremiumModalOpen,
+    calculateTopUpBonus,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'wallet' | 'referrals' | 'invoices' | 'support' | 'settings'>('services');
@@ -150,14 +153,31 @@ export default function CustomerDashboardView() {
               <span>Home</span>
             </Link>
 
-            <div className="p-3.5 rounded-2xl bg-black/50 border border-white/10 text-right">
+            <div className="p-3 rounded-2xl bg-black/50 border border-white/10 text-right">
               <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block">
                 HomeEase Wallet
               </span>
-              <span className="text-xl font-extrabold gold-gradient-text font-space">
-                ₹{currentUser.walletBalance.toLocaleString('en-IN')}
-              </span>
+              <div className="flex items-baseline gap-1.5 justify-end">
+                <span className="text-lg font-extrabold gold-gradient-text font-space">
+                  ₹{currentUser.walletBalance.toLocaleString('en-IN')}
+                </span>
+                {(currentUser.bonusBalance || 0) > 0 && (
+                  <span className="text-xs font-bold text-emerald-400">
+                    (+₹{currentUser.bonusBalance})
+                  </span>
+                )}
+              </div>
             </div>
+
+            {!currentUser.isPremium && (
+              <button
+                onClick={() => setIsPremiumModalOpen(true)}
+                className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#b48c1e]/20 to-[#D4AF37]/30 border border-[#D4AF37] text-amber-800 dark:text-[#D4AF37] hover:text-black dark:hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                <span>Become VIP</span>
+              </button>
+            )}
 
             <button
               onClick={() => openBookingModal()}
@@ -540,63 +560,175 @@ export default function CustomerDashboardView() {
 
         {/* TAB 2: WALLET */}
         {activeTab === 'wallet' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-6 p-6 rounded-2xl glass-panel-gold border border-[#D4AF37]/30 space-y-4">
-              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                HomeEase Instant Digital Wallet
-              </span>
-              <div className="text-4xl font-extrabold text-white font-space">
-                ₹{currentUser.walletBalance.toLocaleString('en-IN')}
-              </div>
-              <p className="text-xs text-gray-300">
-                Usable across all 14 service categories. Instant 1-click checkout with zero bank OTP friction.
-              </p>
-
-              <form onSubmit={handleAddFunds} className="space-y-3 pt-3 border-t border-white/10">
-                <label className="text-xs text-gray-300 font-medium block">Top-up Wallet:</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="500"
-                    step="500"
-                    value={walletAddAmount}
-                    onChange={(e) => setWalletAddAmount(Number(e.target.value))}
-                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
-                  />
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-[#D4AF37] text-black font-bold rounded-xl text-xs"
-                  >
-                    Add Credits
-                  </button>
+          <div className="space-y-6">
+            {/* SPLIT BALANCES GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* REAL DEPOSIT BALANCE */}
+              <div className="p-6 rounded-2xl glass-panel-gold border border-[#D4AF37]/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                    Real Deposit Balance
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
+                    100% Usable
+                  </span>
                 </div>
-                {showWalletSuccess && (
-                  <div className="text-xs text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>₹{walletAddAmount} successfully deposited to your HomeEase wallet!</span>
-                  </div>
-                )}
-              </form>
+                <div className="text-3xl sm:text-4xl font-extrabold text-white font-space">
+                  ₹{currentUser.walletBalance.toLocaleString('en-IN')}
+                </div>
+                <p className="text-xs text-gray-300">
+                  Fully usable across all 14 service categories and hardware invoices. Instant 1-click booking without bank OTP delays.
+                </p>
+              </div>
+
+              {/* PROMOTIONAL BONUS BALANCE */}
+              <div className="p-6 rounded-2xl bg-gradient-to-tr from-purple-950/40 to-indigo-950/40 border border-purple-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-purple-300 tracking-wider">
+                    Promotional Bonus Balance
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold">
+                    Max 10% Per Order
+                  </span>
+                </div>
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#D4AF37] font-space">
+                  ₹{(currentUser.bonusBalance || 0).toLocaleString('en-IN')}
+                </div>
+                <p className="text-xs text-gray-300">
+                  Earned from deposit bonuses, VIP onboarding, and referrals. Up to 10% automatically deducted from your order subtotal at checkout!
+                </p>
+              </div>
             </div>
 
-            <div className="lg:col-span-6 space-y-3">
-              <h4 className="text-xs uppercase font-bold text-gray-400 tracking-wider">
-                Recent Wallet Ledger
-              </h4>
-              <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-xl bg-white/3 border border-white/5 flex justify-between">
-                  <div>
-                    <div className="font-semibold text-white">Platinum Tier Monthly Cashback</div>
-                    <div className="text-[10px] text-gray-400">Direct Loyalty Credit</div>
+            {/* UPGRADE TO PREMIUM BANNER IF NOT PREMIUM */}
+            {!currentUser.isPremium && (
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#D4AF37]/20 to-amber-500/15 border border-[#D4AF37]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-[#D4AF37] text-black">
+                    <Crown className="w-6 h-6 fill-black" />
                   </div>
-                  <span className="text-emerald-400 font-bold">+₹500</span>
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>Upgrade to HomeEase Premium Club</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">FREE VIP GIFT</span>
+                    </h4>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      Get ₹500 instant bonus credits, VIP priority queue (18m arrival), and exclusive discounts.
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3 rounded-xl bg-white/3 border border-white/5 flex justify-between">
-                  <div>
-                    <div className="font-semibold text-white">Payment for Pipe Repair #HE-BK-89421</div>
-                    <div className="text-[10px] text-gray-400">Debited via Wallet</div>
+                <button
+                  onClick={() => setIsPremiumModalOpen(true)}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-extrabold text-xs shadow-lg shadow-[#D4AF37]/30 whitespace-nowrap"
+                >
+                  Claim ₹500 & Upgrade
+                </button>
+              </div>
+            )}
+
+            {/* TOP UP CALCULATOR & LEDGER */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-6 p-6 rounded-2xl bg-black/40 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase font-bold text-gray-300 tracking-wider">
+                    Add Money with Tiered Bonus
+                  </span>
+                  <span className="text-[10px] text-[#00D9FF] font-semibold">Instant Credit</span>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-400 block">Select or Enter Amount (INR):</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { amount: 500, label: '₹500', bonus: '+5%' },
+                      { amount: 1000, label: '₹1,000', bonus: '+7%' },
+                      { amount: 2000, label: '₹2,000', bonus: '+7%' },
+                      { amount: 5000, label: '₹5,000', bonus: '+20%' },
+                    ].map((chip) => (
+                      <button
+                        key={chip.amount}
+                        type="button"
+                        onClick={() => setWalletAddAmount(chip.amount)}
+                        className={`p-2 rounded-xl border text-center transition-all ${
+                          walletAddAmount === chip.amount
+                            ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-white shadow-sm'
+                            : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="text-xs font-bold">{chip.label}</div>
+                        <div className="text-[10px] text-emerald-400 font-extrabold">{chip.bonus}</div>
+                      </button>
+                    ))}
                   </div>
-                  <span className="text-gray-300 font-bold">-₹617</span>
+
+                  <div className="flex gap-2 pt-1">
+                    <input
+                      type="number"
+                      min="100"
+                      step="100"
+                      value={walletAddAmount}
+                      onChange={(e) => setWalletAddAmount(Number(e.target.value))}
+                      className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                    <button
+                      onClick={handleAddFunds}
+                      className="px-5 py-2 bg-[#D4AF37] hover:bg-[#F3E5AB] text-black font-extrabold rounded-xl text-xs transition-all shadow-md shadow-[#D4AF37]/20"
+                    >
+                      Add ₹{walletAddAmount}
+                    </button>
+                  </div>
+                </div>
+
+                {/* LIVE BONUS PREVIEW CALCULATOR */}
+                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-gray-400">
+                    <span>Deposit into Real Wallet:</span>
+                    <span className="text-white font-mono font-bold">₹{walletAddAmount}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-400 font-semibold">
+                    <span>Bonus Credits ({calculateTopUpBonus(walletAddAmount) > 0 ? (walletAddAmount >= 5000 ? '+20%' : walletAddAmount >= 1000 ? '+7%' : '+5%') : '0%'}):</span>
+                    <span className="font-mono font-bold">+₹{calculateTopUpBonus(walletAddAmount)}</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/10 flex justify-between text-white font-bold">
+                    <span>Total Account Value:</span>
+                    <span className="text-[#D4AF37] font-mono font-bold text-sm">
+                      ₹{walletAddAmount + calculateTopUpBonus(walletAddAmount)}
+                    </span>
+                  </div>
+                </div>
+
+                {showWalletSuccess && (
+                  <div className="text-xs text-emerald-400 flex items-center gap-1.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>
+                      Successfully added ₹{walletAddAmount} to Real Wallet + ₹{calculateTopUpBonus(walletAddAmount)} extra bonus!
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="lg:col-span-6 space-y-3">
+                <h4 className="text-xs uppercase font-bold text-gray-400 tracking-wider">
+                  Wallet Bonus Rules & Ledger
+                </h4>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs text-gray-300">
+                  <div className="font-bold text-white mb-1">Tiered Top-Up Bonus Scale:</div>
+                  <ul className="space-y-1 text-[11px] list-disc list-inside text-gray-400">
+                    <li><strong className="text-white">₹500 to ₹999:</strong> +5% extra promotional bonus</li>
+                    <li><strong className="text-white">₹1,000 to ₹4,999:</strong> +7% extra promotional bonus</li>
+                    <li><strong className="text-white">₹5,000 and above:</strong> +20% extra promotional bonus</li>
+                    <li><strong className="text-white">Checkout Rule:</strong> Up to 10% of bonus balance can be used per booking.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="p-3 rounded-xl bg-white/3 border border-white/5 flex justify-between">
+                    <div>
+                      <div className="font-semibold text-white">Top-Up Bonus Added</div>
+                      <div className="text-[10px] text-gray-400">Automated Promotional Credit</div>
+                    </div>
+                    <span className="text-emerald-400 font-bold">+10% Cap Active</span>
+                  </div>
                 </div>
               </div>
             </div>

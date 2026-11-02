@@ -35,6 +35,7 @@ import AIAssistantModal from '@/components/modals/AIAssistantModal';
 import ServiceDetailModal from '@/components/modals/ServiceDetailModal';
 import VideoTestimonialModal from '@/components/modals/VideoTestimonialModal';
 import CityUnavailableModal from '@/components/modals/CityUnavailableModal';
+import PremiumUpgradeModal from '@/components/modals/PremiumUpgradeModal';
 
 import { useApp } from '@/context/AppContext';
 import { Sparkles, Bot, Shield, User, Briefcase } from 'lucide-react';
@@ -170,6 +171,7 @@ export default function Home() {
       <ServiceDetailModal />
       <VideoTestimonialModal />
       <CityUnavailableModal />
+      <PremiumUpgradeModal />
     </main>
   );
 }
