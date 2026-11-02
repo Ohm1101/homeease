@@ -87,6 +87,7 @@ interface AppContextType {
   // Wallet
   addFundsToWallet: (amount: number) => void;
   calculateTopUpBonus: (amount: number) => number;
+  completeCustomerOrder: (opts?: { bonusUsed?: number; walletUsed?: number }) => void;
   
   // Premium Membership & VIP Onboarding
   isPremiumModalOpen: boolean;
@@ -475,6 +476,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsPremiumModalOpen(false);
   };
 
+  const completeCustomerOrder = (opts?: { bonusUsed?: number; walletUsed?: number }) => {
+    if (!currentUser) return;
+    const bonusUsed = opts?.bonusUsed || 0;
+    const walletUsed = opts?.walletUsed || 0;
+    const newPoints = (currentUser.loyaltyPoints || 0) + 100;
+    let newTier = currentUser.loyaltyTier || 'Regular';
+
+    // Tier advancement based on accumulated points
+    if (newPoints >= 5000) {
+      newTier = 'Platinum';
+    } else if (newPoints >= 2000 && newTier === 'Regular') {
+      newTier = 'Gold';
+    } else if (newPoints >= 500 && newTier === 'Regular') {
+      newTier = 'Silver';
+    }
+
+    const updated: User = {
+      ...currentUser,
+      walletBalance: Math.max(0, currentUser.walletBalance - walletUsed),
+      bonusBalance: Math.max(0, (currentUser.bonusBalance || 0) - bonusUsed),
+      ordersCompletedCount: (currentUser.ordersCompletedCount || 0) + 1,
+      loyaltyPoints: newPoints,
+      loyaltyTier: newTier,
+    };
+
+    setCurrentUser(updated);
+    if (currentUser.role === 'customer') {
+      setCustomerProfile(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
+      }
+    }
+  };
+
   const triggerInstantBooking = (serviceName: string, category: string, price: number) => {
     const tierETA = getTierETA(currentUser?.loyaltyTier || 'Regular');
     const newBooking: Booking = {
@@ -587,6 +622,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateVerificationStatus,
         addFundsToWallet,
         calculateTopUpBonus,
+        completeCustomerOrder,
         isPremiumModalOpen,
         setIsPremiumModalOpen,
         upgradeToPremium,

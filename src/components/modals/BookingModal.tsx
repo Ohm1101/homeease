@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { SERVICE_CATEGORIES } from '@/data/mockData';
+import { calculateCheckoutDiscounts, getTierETA } from '@/utils/pricingAndTiers';
 
 export default function BookingModal() {
   const {
@@ -30,6 +31,7 @@ export default function BookingModal() {
     currentUser,
     bookingFormKey,
     triggerInstantBooking,
+    completeCustomerOrder,
   } = useApp();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -41,6 +43,7 @@ export default function BookingModal() {
   const [issueDescription, setIssueDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card' | 'Wallet' | 'Cash'>('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   // ALWAYS RESET ON OPEN OR FORM KEY CHANGE
   useEffect(() => {
@@ -48,6 +51,7 @@ export default function BookingModal() {
       setStep(1);
       setIsProcessing(false);
       setIssueDescription('');
+      setWalletError(null);
       const targetCat = selectedBookingCategory || selectedCategoryDetail;
       if (targetCat) {
         setSelectedCatId(targetCat.id);
@@ -68,29 +72,50 @@ export default function BookingModal() {
     currentCategory.subServices.find((s) => s.id === selectedSubServiceId) ||
     currentCategory.subServices[0];
 
-  // Dynamic pricing calculation
+  // Dynamic pricing calculation & Tier ETA
+  const tierETA = getTierETA(currentUser?.loyaltyTier || 'Regular');
   const basePrice = currentSubService.price;
   const distanceFee = 45;
   const urgencyFee = scheduleType === 'instant' ? 50 : 0;
-  const gst = Math.round((basePrice + distanceFee + urgencyFee) * 0.18);
+  const serviceSubtotal = basePrice + distanceFee + urgencyFee;
+
+  // Checkout discounts: ₹200 off first 5 orders + capped 10% bonus usage
+  const { welcomeDiscount, bonusDeduction, netPayableSubtotal } = calculateCheckoutDiscounts({
+    subtotal: serviceSubtotal,
+    ordersCompletedCount: currentUser?.ordersCompletedCount || 0,
+    bonusBalance: currentUser?.bonusBalance || 0,
+  });
+
+  const gst = Math.round(netPayableSubtotal * 0.18);
   const platformFee = 29;
   const loyaltyDiscount = currentUser?.loyaltyTier === 'Platinum' ? 50 : 0;
-  const grandTotal = basePrice + distanceFee + urgencyFee + gst + platformFee - loyaltyDiscount;
+  const grandTotal = Math.max(0, netPayableSubtotal + gst + platformFee - loyaltyDiscount);
 
   const handleStartFresh = () => {
     setStep(1);
     setIsProcessing(false);
     setIssueDescription('');
+    setWalletError(null);
     setSelectedCatId('plumbing');
     setSelectedSubServiceId('p1');
     setScheduleType('instant');
   };
 
   const handleConfirmAndPay = () => {
+    // Validate Real Wallet Balance if paying with Wallet
+    if (paymentMethod === 'Wallet') {
+      const realBalance = currentUser?.walletBalance || 0;
+      if (realBalance < grandTotal) {
+        setWalletError(`Insufficient Real Deposit balance (₹${realBalance}). Need ₹${grandTotal}. Please top up or choose UPI/Card.`);
+        return;
+      }
+    }
+    setWalletError(null);
     setIsProcessing(true);
+
     setTimeout(() => {
       setIsProcessing(false);
-      setStep(1); // Clean jump-start reset for next booking
+      setStep(1);
       setIssueDescription('');
       try {
         confetti({
@@ -102,6 +127,13 @@ export default function BookingModal() {
       } catch (err) {
         // silent fallback
       }
+
+      // Settle balances, increment completed orders count & loyalty points
+      completeCustomerOrder({
+        bonusUsed: bonusDeduction,
+        walletUsed: paymentMethod === 'Wallet' ? grandTotal : 0,
+      });
+
       triggerInstantBooking(currentSubService.title, currentCategory.name, grandTotal);
     }, 1200);
   };
@@ -242,10 +274,15 @@ export default function BookingModal() {
               >
                 <div className="flex items-center gap-1.5 text-[#00D9FF] font-bold text-sm mb-1">
                   <Zap className="w-4 h-4 fill-[#00D9FF]" />
-                  <span>Immediate Express</span>
+                  <span>Immediate Express ({tierETA}m ETA)</span>
                 </div>
                 <p className="text-gray-400 text-[11px]">
-                  Priority dispatch within 25 minutes. Ideal for leaks, blackouts, or urgent repairs.
+                  Priority dispatch queue active for <strong className="text-white">{currentUser?.loyaltyTier || 'Regular'} Tier</strong>.
+                  {!currentUser?.isPremium && (
+                    <span className="block text-[#D4AF37] font-semibold mt-1">
+                      ★ Upgrade to Premium for 18-min VIP queue
+                    </span>
+                  )}
                 </p>
               </button>
 
@@ -342,6 +379,21 @@ export default function BookingModal() {
                   <span className="text-white font-mono font-medium">₹{urgencyFee}</span>
                 </div>
               )}
+              {welcomeDiscount > 0 && (
+                <div className="flex justify-between items-center text-[#D4AF37] font-semibold bg-[#D4AF37]/10 px-3 py-1.5 rounded-xl border border-[#D4AF37]/30">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>First 5 Orders Welcome Offer ({5 - (currentUser?.ordersCompletedCount || 0)} orders left):</span>
+                  </span>
+                  <span className="font-mono font-bold">-₹{welcomeDiscount}</span>
+                </div>
+              )}
+              {bonusDeduction > 0 && (
+                <div className="flex justify-between items-center text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/30">
+                  <span>Club Bonus Deduction (Max 10% Cap):</span>
+                  <span className="font-mono font-bold">-₹{bonusDeduction}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-400">
                 <span>Platform Safety & Damage Insurance Fee:</span>
                 <span className="text-white font-mono font-medium">₹{platformFee}</span>
@@ -358,7 +410,10 @@ export default function BookingModal() {
               )}
 
               <div className="pt-3 border-t border-white/10 flex justify-between items-center text-sm">
-                <span className="font-bold text-white">Guaranteed Lock Total:</span>
+                <div>
+                  <span className="font-bold text-white block">Net Guaranteed Lock Total:</span>
+                  <span className="text-[10px] text-gray-400">Payable via Real Deposit / UPI / Card</span>
+                </div>
                 <span className="text-xl font-extrabold text-[#D4AF37] font-space">
                   ₹{grandTotal}
                 </span>
@@ -398,7 +453,12 @@ export default function BookingModal() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'UPI', label: 'UPI / QR Code', icon: QrCode, desc: 'Google Pay, PhonePe, Paytm' },
-                { id: 'Wallet', label: 'HomeEase Wallet', icon: Sparkles, desc: `Balance: ₹${currentUser?.walletBalance || 0}` },
+                {
+                  id: 'Wallet',
+                  label: 'HomeEase Wallet',
+                  icon: Sparkles,
+                  desc: `Real Cash: ₹${currentUser?.walletBalance || 0} (Bonus: ₹${currentUser?.bonusBalance || 0})`,
+                },
                 { id: 'Card', label: 'Credit / Debit Card', icon: CreditCard, desc: 'Visa, Mastercard, Amex' },
                 { id: 'Cash', label: 'Cash on Completion', icon: CheckCircle2, desc: 'Pay after service approval' },
               ].map((m) => {
@@ -408,7 +468,10 @@ export default function BookingModal() {
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setPaymentMethod(m.id as typeof paymentMethod)}
+                    onClick={() => {
+                      setPaymentMethod(m.id as typeof paymentMethod);
+                      setWalletError(null);
+                    }}
                     className={`p-3.5 rounded-2xl border text-left transition-all ${
                       isSelected
                         ? 'bg-[#D4AF37]/15 border-[#D4AF37] text-white shadow-md'
@@ -424,6 +487,13 @@ export default function BookingModal() {
                 );
               })}
             </div>
+
+            {walletError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{walletError}</span>
+              </div>
+            )}
 
             <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
               <div>
