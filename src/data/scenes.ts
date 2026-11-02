@@ -8,9 +8,9 @@ export const SCENES: SceneStep[] = [
     subtitle: "One Platform. Every Home Service.",
     category: "Genesis",
     description: "In an interconnected world, your home is your sanctuary. Discover a revolutionary ecosystem designed for effortless living.",
-    cameraPos: [13, 11, 16],
-    cameraTarget: [0, 2.5, 0],
-    mode: 'villa'
+    cameraPos: [0, 0, 18],
+    cameraTarget: [0, 0, 0],
+    mode: 'logo'
   },
   {
     id: 2,

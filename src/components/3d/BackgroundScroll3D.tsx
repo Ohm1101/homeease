@@ -365,7 +365,6 @@ export default function BackgroundScroll3D() {
         glbContainer.add(model);
         const isCurrentLight = typeof document !== 'undefined' && (document.documentElement.classList.contains('light') || !document.documentElement.classList.contains('dark'));
         applyThemeMaterials(isCurrentLight);
-        renderer.render(scene, camera);
       },
       undefined,
       (error) => {
@@ -734,8 +733,8 @@ export default function BackgroundScroll3D() {
         vehicleGroup.quaternion.setFromUnitVectors(_tempVec3.set(1, 0, 0), tangent);
       }
 
-      // Particles morphing (Finale)
-      const isLogoParticles = p > 0.97;
+      // Particles morphing (Genesis & Finale)
+      const isLogoParticles = p < 0.05 || p > 0.97;
       particles.visible = isLogoParticles;
       if (isLogoParticles) {
         const positions = particleGeom.attributes.position.array as Float32Array;
@@ -764,12 +763,6 @@ export default function BackgroundScroll3D() {
     } else {
       frameId = window.setTimeout(tick, 10);
     }
-
-    const renderIntervalId = setInterval(() => {
-      try {
-        renderer.render(scene, camera);
-      } catch {}
-    }, 250);
 
     // Resize Handler
     const handleResize = () => {
@@ -807,7 +800,6 @@ export default function BackgroundScroll3D() {
 
     // Cleanup
     return () => {
-      clearInterval(renderIntervalId);
       themeObserver.disconnect();
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
