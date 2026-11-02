@@ -22,6 +22,8 @@ import {
   Layers,
   Zap,
   LogIn,
+  LogOut,
+  Crown,
   ArrowRight,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -29,6 +31,8 @@ import { useApp } from '@/context/AppContext';
 export default function Navbar() {
   const {
     currentUser,
+    isCustomerLoggedIn,
+    logoutCustomer,
     activePersona,
     setActivePersona,
     selectedCity,
@@ -41,6 +45,8 @@ export default function Navbar() {
     openAuthModal,
     setIsPricingModalOpen,
     setIsAIAssistantOpen,
+    setIsPremiumModalOpen,
+    cancelSubscription,
   } = useApp();
 
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -73,8 +79,62 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* AT THE VERY END OF HEADER: 3-LINE MENU BUTTON */}
-        <div className="flex items-center gap-2.5">
+        {/* RIGHT CONTROLS: CUSTOMER PROFILE / LOGOUT & MENU */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {isCustomerLoggedIn && currentUser ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/#customer-dashboard"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 transition-all text-xs font-semibold text-slate-900 dark:text-white"
+                title="View Customer Dashboard"
+              >
+                <div className="relative">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-6 h-6 rounded-lg object-cover ring-1 ring-amber-500"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <div className="text-[11px] font-bold leading-tight flex items-center gap-1">
+                    <span>{currentUser.name.split(' ')[0]}</span>
+                    {currentUser.isPremium && (
+                      <Crown className="w-3 h-3 text-[#D4AF37] fill-[#D4AF37]" />
+                    )}
+                  </div>
+                  <div className="text-[9px] text-amber-700 dark:text-[#D4AF37] font-mono leading-none">
+                    ₹{currentUser.walletBalance.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </Link>
+
+              <button
+                onClick={logoutCustomer}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-rose-100 dark:bg-white/5 dark:hover:bg-rose-950/30 text-slate-600 hover:text-rose-600 dark:text-gray-400 dark:hover:text-rose-400 border border-slate-300 dark:border-white/10 transition-all text-xs flex items-center gap-1"
+                title="Log out of account"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[11px] font-bold">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <div className="hidden sm:flex items-center gap-1.5">
+              <Link
+                href="/customer/login"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-xs font-bold text-slate-800 dark:text-gray-200 transition-all border border-slate-300 dark:border-white/10"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black text-xs font-extrabold shadow-sm hover:opacity-90 transition-all"
+              >
+                Register
+              </Link>
+            </div>
+          )}
+
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-bold text-xs transition-all shadow-md group cursor-pointer"
@@ -227,41 +287,130 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* ACCOUNTS & REGISTRATION */}
-          <div className="space-y-1.5 text-xs pt-2 border-t border-slate-200 dark:border-white/10">
-            <span className="text-[10px] font-mono uppercase font-bold text-slate-400 dark:text-gray-500 tracking-wider block px-2 pb-1">
-              Account Portals & Registration
+          {/* ACCOUNTS & PROFILE SECTION */}
+          <div className="space-y-2 text-xs pt-3 border-t border-slate-200 dark:border-white/10">
+            <span className="text-[10px] font-mono uppercase font-bold text-slate-400 dark:text-gray-500 tracking-wider block px-2 pb-0.5">
+              {isCustomerLoggedIn && currentUser ? 'Customer Profile & Membership' : 'Account Portals & Registration'}
             </span>
 
-            <Link
-              href="/register"
-              onClick={() => setIsDrawerOpen(false)}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/40 text-slate-900 dark:text-white transition-all font-bold"
-            >
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <div>
-                  <div>Create Account (Register)</div>
-                  <div className="text-[10px] text-slate-500 dark:text-gray-400 font-normal">Customer & Service Provider Signup</div>
+            {isCustomerLoggedIn && currentUser ? (
+              <div className="p-4 rounded-2xl bg-slate-100/80 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-12 h-12 rounded-xl object-cover ring-2 ring-[#D4AF37]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-slate-900 dark:text-white truncate text-sm">{currentUser.name}</h4>
+                      {currentUser.isPremium && (
+                        <span className="p-0.5 rounded bg-amber-500/20 text-[#D4AF37]">
+                          <Crown className="w-3.5 h-3.5 fill-current" />
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">{currentUser.email}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-[#D4AF37] font-bold">
+                        {currentUser.loyaltyTier} Tier
+                      </span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                        ₹{currentUser.walletBalance} Real
+                      </span>
+                      {(currentUser.bonusBalance || 0) > 0 && (
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                          +₹{currentUser.bonusBalance} Bonus
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            </Link>
 
-            <Link
-              href="/customer/login"
-              onClick={() => setIsDrawerOpen(false)}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800/40 text-slate-900 dark:text-white transition-all font-bold"
-            >
-              <div className="flex items-center gap-2.5">
-                <User className="w-4 h-4 text-[#0284c7] dark:text-[#00D9FF]" />
-                <div>
-                  <div>Customer Login & Portal</div>
-                  <div className="text-[10px] text-slate-500 dark:text-gray-400 font-normal">View Services & Available Providers</div>
+                {/* VIP SUBSCRIPTION STATUS / CANCEL OR UPGRADE */}
+                {currentUser.isPremium ? (
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-amber-800 dark:text-[#D4AF37] font-bold text-xs">
+                      <Crown className="w-3.5 h-3.5 fill-current" />
+                      <span>VIP Subscription Active</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (confirm('Cancel your HomeEase VIP Membership? You will return to standard queue timing.')) {
+                          cancelSubscription();
+                        }
+                      }}
+                      className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline font-bold"
+                    >
+                      Cancel Plan
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      setIsPremiumModalOpen(true);
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-[#D4AF37]/30 border border-[#D4AF37]/50 text-amber-800 dark:text-[#D4AF37] font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition-all"
+                  >
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Upgrade to VIP (₹499/yr)</span>
+                  </button>
+                )}
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    href="/#customer-dashboard"
+                    onClick={() => setIsDrawerOpen(false)}
+                    className="py-2 px-3 rounded-xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 text-slate-900 dark:text-white font-bold text-xs text-center transition-all"
+                  >
+                    My Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsDrawerOpen(false);
+                      logoutCustomer();
+                    }}
+                    className="py-2 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>Log Out</span>
+                  </button>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-sky-600 dark:text-[#00D9FF]" />
-            </Link>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/40 text-slate-900 dark:text-white transition-all font-bold"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <div>
+                      <div>Create Account (Register)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400 font-normal">Customer & Service Provider Signup</div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </Link>
+
+                <Link
+                  href="/customer/login"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800/40 text-slate-900 dark:text-white transition-all font-bold"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <User className="w-4 h-4 text-[#0284c7] dark:text-[#00D9FF]" />
+                    <div>
+                      <div>Customer Login & Portal</div>
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400 font-normal">View Services & Available Providers</div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-sky-600 dark:text-[#00D9FF]" />
+                </Link>
+              </>
+            )}
 
             <Link
               href="/provider/login"

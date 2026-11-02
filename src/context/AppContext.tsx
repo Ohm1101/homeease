@@ -93,6 +93,7 @@ interface AppContextType {
   isPremiumModalOpen: boolean;
   setIsPremiumModalOpen: (open: boolean) => void;
   upgradeToPremium: () => void;
+  cancelSubscription: () => void;
   
   // City Availability
   isCityUnavailableModalOpen: boolean;
@@ -273,7 +274,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsCustomerLoggedIn(false);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('homeease_customer_logged_in');
+      localStorage.removeItem('homeease_customer_profile');
     }
+    setCustomerProfile(defaultUserCustomer);
     if (activePersona === 'customer') {
       setCurrentUser(null);
     }
@@ -476,6 +479,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsPremiumModalOpen(false);
   };
 
+  const cancelSubscription = () => {
+    if (!currentUser) return;
+    const points = currentUser.loyaltyPoints || 0;
+    const fallbackTier = points >= 5000 ? 'Platinum' : points >= 2000 ? 'Gold' : points >= 500 ? 'Silver' : 'Regular';
+
+    const updated: User = {
+      ...currentUser,
+      isPremium: false,
+      loyaltyTier: fallbackTier,
+    };
+    setCurrentUser(updated);
+    if (currentUser.role === 'customer') {
+      setCustomerProfile(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('homeease_customer_profile', JSON.stringify(updated));
+      }
+    }
+
+    const cancelNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      title: 'Subscription Cancelled',
+      message: 'Your HomeEase VIP subscription has been cancelled. Account reverted to standard status.',
+      time: 'Just now',
+      read: false,
+      type: 'payment',
+    };
+    setNotifications((prev) => [cancelNotif, ...prev]);
+  };
+
   const completeCustomerOrder = (opts?: { bonusUsed?: number; walletUsed?: number }) => {
     if (!currentUser) return;
     const bonusUsed = opts?.bonusUsed || 0;
@@ -626,6 +658,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isPremiumModalOpen,
         setIsPremiumModalOpen,
         upgradeToPremium,
+        cancelSubscription,
         triggerInstantBooking,
       }}
     >

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -22,13 +22,19 @@ import { useApp } from '@/context/AppContext';
 
 export default function CustomerLoginPage() {
   const router = useRouter();
-  const { loginAsCustomer, customerProfile, theme, toggleTheme } = useApp();
+  const { loginAsCustomer, customerProfile, isCustomerLoggedIn, theme, toggleTheme } = useApp();
 
   const [phone, setPhone] = useState(customerProfile.phone);
   const [email, setEmail] = useState(customerProfile.email);
   const [name, setName] = useState(customerProfile.name);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'otp' | 'google' | 'quick'>('quick');
+
+  useEffect(() => {
+    if (isCustomerLoggedIn) {
+      router.push('/#customer-dashboard');
+    }
+  }, [isCustomerLoggedIn, router]);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();

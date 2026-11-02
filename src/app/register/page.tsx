@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
@@ -25,7 +25,13 @@ import PremiumUpgradeModal from '@/components/modals/PremiumUpgradeModal';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { loginAsCustomer, loginAsProvider, theme, toggleTheme, supportedCities, setIsPremiumModalOpen } = useApp();
+  const { loginAsCustomer, loginAsProvider, theme, toggleTheme, supportedCities, setIsPremiumModalOpen, isCustomerLoggedIn } = useApp();
+
+  useEffect(() => {
+    if (isCustomerLoggedIn) {
+      router.push('/#customer-dashboard');
+    }
+  }, [isCustomerLoggedIn, router]);
 
   const [role, setRole] = useState<'customer' | 'provider'>('customer');
   const [name, setName] = useState('');

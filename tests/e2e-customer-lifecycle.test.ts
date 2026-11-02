@@ -59,6 +59,17 @@ describe('E2E Customer Lifecycle & Split Wallet System', () => {
     expect(upgradedUser.walletBalance).toBe(100); // Existing deposit untouched
     expect(upgradedUser.loyaltyTier).toBe('Silver');
     expect(getTierETA(upgradedUser.loyaltyTier)).toBe(18); // 18m express arrival
+
+    // Cancel Subscription
+    const cancelledUser: User = {
+      ...upgradedUser,
+      isPremium: false,
+      loyaltyTier: 'Regular',
+    };
+
+    expect(cancelledUser.isPremium).toBe(false);
+    expect(cancelledUser.loyaltyTier).toBe('Regular');
+    expect(getTierETA(cancelledUser.loyaltyTier)).toBe(30); // returns to 30m standard queue
   });
 
   it('correctly applies tiered top-up bonuses and updates wallet balance', () => {

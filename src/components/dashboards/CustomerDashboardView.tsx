@@ -48,6 +48,7 @@ export default function CustomerDashboardView() {
     selectedCity,
     setIsPremiumModalOpen,
     calculateTopUpBonus,
+    cancelSubscription,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'wallet' | 'referrals' | 'invoices' | 'support' | 'settings'>('services');
@@ -600,8 +601,35 @@ export default function CustomerDashboardView() {
               </div>
             </div>
 
-            {/* UPGRADE TO PREMIUM BANNER IF NOT PREMIUM */}
-            {!currentUser.isPremium && (
+            {/* MEMBERSHIP STATUS / CANCEL OR UPGRADE BANNER */}
+            {currentUser.isPremium ? (
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#D4AF37]/20 to-amber-500/15 border border-[#D4AF37]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-[#D4AF37] text-black">
+                    <Crown className="w-6 h-6 fill-black" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>HomeEase VIP Subscription Active</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">ANNUAL VIP PASS</span>
+                    </h4>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      You enjoy 18m express arrival dispatch, ₹500 welcome credits, and ₹200 off your first 5 bookings.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to cancel your HomeEase VIP Subscription? You will return to standard queue timing (30m arrival).')) {
+                      cancelSubscription();
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 hover:text-white font-bold text-xs transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                >
+                  Cancel Subscription
+                </button>
+              </div>
+            ) : (
               <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#D4AF37]/20 to-amber-500/15 border border-[#D4AF37]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-2xl bg-[#D4AF37] text-black">
@@ -610,18 +638,18 @@ export default function CustomerDashboardView() {
                   <div>
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                       <span>Upgrade to HomeEase Premium Club</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">FREE VIP GIFT</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">₹500 GIFT BONUS</span>
                     </h4>
                     <p className="text-xs text-gray-300 mt-0.5">
-                      Get ₹500 instant bonus credits, VIP priority queue (18m arrival), and exclusive discounts.
+                      Scan Google Pay QR to unlock ₹500 instant bonus credits, VIP priority queue (18m arrival), and 10% cashback.
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsPremiumModalOpen(true)}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-extrabold text-xs shadow-lg shadow-[#D4AF37]/30 whitespace-nowrap"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-extrabold text-xs shadow-lg shadow-[#D4AF37]/30 whitespace-nowrap cursor-pointer hover:opacity-90 transition-all"
                 >
-                  Claim ₹500 & Upgrade
+                  Pay ₹499 & Upgrade
                 </button>
               </div>
             )}
@@ -823,9 +851,33 @@ export default function CustomerDashboardView() {
                 <span className="text-gray-400">Gate Instructions:</span>
                 <span className="text-[#00D9FF]">Visitor Entry pass via MyGate pre-authorized</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Biometric 2FA:</span>
-                <span className="text-emerald-400 font-semibold">Active & Encrypted</span>
+              <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                <span className="text-gray-400">Membership Subscription:</span>
+                {currentUser.isPremium ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      VIP Active (18m queue)
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (confirm('Cancel your HomeEase VIP Membership?')) {
+                          cancelSubscription();
+                        }
+                      }}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 font-bold underline"
+                    >
+                      Cancel Plan
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsPremiumModalOpen(true)}
+                    className="text-amber-500 hover:underline font-bold"
+                  >
+                    Upgrade to VIP (₹499) →
+                  </button>
+                )}
               </div>
             </div>
           </div>

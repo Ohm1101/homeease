@@ -14,7 +14,7 @@ import { useApp } from '@/context/AppContext';
 
 export default function PricingSection() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
-  const { openBookingModal } = useApp();
+  const { openBookingModal, setIsPremiumModalOpen } = useApp();
 
   return (
     <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative">
@@ -138,7 +138,13 @@ export default function PricingSection() {
               </div>
 
               <button
-                onClick={() => openBookingModal()}
+                onClick={() => {
+                  if (plan.priceMonthly > 0) {
+                    setIsPremiumModalOpen(true);
+                  } else {
+                    openBookingModal();
+                  }
+                }}
                 className={`w-full py-3.5 rounded-xl font-bold text-xs tracking-tight transition-all shadow-lg flex items-center justify-center gap-2 ${
                   isPopular
                     ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black shadow-[#D4AF37]/25 hover:opacity-90'
