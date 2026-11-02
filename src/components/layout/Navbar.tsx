@@ -64,9 +64,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto rounded-2xl glass-panel px-4 sm:px-6 py-2.5 flex items-center justify-between border border-slate-200/80 dark:border-white/10 shadow-lg backdrop-blur-2xl bg-white/70 dark:bg-[#07111F]/80">
         {/* BRAND LOGO ON THE LEFT */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] via-[#00D9FF] to-[#07111F] p-[1.5px] transition-transform duration-300 group-hover:scale-105">
-            <div className="w-full h-full bg-slate-950 dark:bg-[#030712] rounded-[9px] flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] via-[#00D9FF] to-[#07111F] p-[1.5px] transition-transform duration-300 group-hover:scale-105 shadow-md">
+            <div className="w-full h-full bg-[#0a1526] rounded-[9px] flex items-center justify-center overflow-hidden">
+              <img
+                src="/images/homeease-icon.png"
+                alt="HomeEase"
+                className="w-full h-full object-cover scale-110"
+              />
             </div>
           </div>
           <div className="flex items-center gap-1.5">

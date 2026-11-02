@@ -71,8 +71,12 @@ export default function CustomerLoginPage() {
 
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#00D9FF] p-[1.5px]">
-              <div className="w-full h-full bg-slate-950 dark:bg-[#030712] rounded-[11px] flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <div className="w-full h-full bg-[#0a1526] rounded-[11px] flex items-center justify-center overflow-hidden">
+                <img
+                  src="/images/homeease-icon.png"
+                  alt="HomeEase"
+                  className="w-full h-full object-cover scale-110"
+                />
               </div>
             </div>
             <span className="text-lg font-bold text-slate-900 dark:text-white font-space">
