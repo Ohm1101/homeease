@@ -16,6 +16,8 @@ import {
   Upload,
   Zap,
   RotateCcw,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { SERVICE_CATEGORIES } from '@/data/mockData';
@@ -44,6 +46,7 @@ export default function BookingModal() {
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'Card' | 'Wallet' | 'Cash'>('UPI');
   const [isProcessing, setIsProcessing] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
 
   // ALWAYS RESET ON OPEN OR FORM KEY CHANGE
   useEffect(() => {
@@ -487,6 +490,50 @@ export default function BookingModal() {
                 );
               })}
             </div>
+
+            {/* UPI QR PAYMENT SECTION */}
+            {paymentMethod === 'UPI' && (
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-black/60 border border-[#D4AF37]/50 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left animate-fade-in shadow-inner">
+                <div className="p-2 rounded-2xl bg-white border-2 border-[#D4AF37] shadow-lg shrink-0">
+                  <img
+                    src="/images/subscription-qr.jpg"
+                    alt="Scan UPI QR Code"
+                    className="w-28 h-28 sm:w-32 sm:h-32 object-contain rounded-xl"
+                  />
+                  <div className="text-[10px] font-extrabold text-slate-900 mt-1 text-center font-mono">
+                    ₹{grandTotal}
+                  </div>
+                </div>
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="inline-block px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-[#D4AF37] text-[10px] font-bold uppercase tracking-wider">
+                    Google Pay • PhonePe • Paytm • Any UPI
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Scan QR Code to Authorize ₹{grandTotal}
+                  </h4>
+                  <p className="text-[11px] text-slate-600 dark:text-gray-400 leading-snug">
+                    Open any UPI app on your phone, scan this QR code, and approve payment. Once completed, click Authorize & Dispatch below.
+                  </p>
+                  <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                    <span className="text-[10px] font-mono text-slate-700 dark:text-gray-300">
+                      UPI ID: <strong className="text-slate-900 dark:text-white">homeease.payments@okhdfcbank</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText('homeease.payments@okhdfcbank');
+                        setCopiedUpi(true);
+                        setTimeout(() => setCopiedUpi(false), 2000);
+                      }}
+                      className="px-2 py-0.5 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-[10px] font-bold text-slate-800 dark:text-white flex items-center gap-1 transition-all"
+                    >
+                      {copiedUpi ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {walletError && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">

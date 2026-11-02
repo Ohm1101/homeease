@@ -725,6 +725,28 @@ export default function CustomerDashboardView() {
                   </div>
                 </div>
 
+                {/* GOOGLE PAY UPI QR CODE FOR WALLET TOP-UP */}
+                <div className="p-3.5 rounded-xl bg-white/5 border border-[#D4AF37]/30 flex items-center gap-3">
+                  <div className="p-1.5 rounded-xl bg-white border border-[#D4AF37] shadow-md shrink-0">
+                    <img
+                      src="/images/subscription-qr.jpg"
+                      alt="Google Pay QR Code"
+                      className="w-16 h-16 object-contain rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider block">
+                      Pay via Google Pay / Any UPI App
+                    </span>
+                    <p className="text-[11px] text-gray-300">
+                      Scan QR code to add <strong className="text-white">₹{walletAddAmount}</strong> (+₹{calculateTopUpBonus(walletAddAmount)} bonus).
+                    </p>
+                    <div className="text-[10px] font-mono text-gray-400">
+                      UPI ID: <span className="text-white font-bold">homeease.payments@okhdfcbank</span>
+                    </div>
+                  </div>
+                </div>
+
                 {showWalletSuccess && (
                   <div className="text-xs text-emerald-400 flex items-center gap-1.5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
