@@ -13,7 +13,7 @@
 [![Three.js](https://img.shields.io/badge/Three.js-0.186-black?style=for-the-badge&logo=three.js)](https://threejs.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.3.9-FBF0DF?style=for-the-badge&logo=bun)](https://bun.sh/)
 
-[Key Features](#-key-features) • [Step-by-Step Walkthrough](#-step-by-step-visual-walkthrough) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start) • [Deployment](#-deployment-to-github--vercel)
+[Key Features](#-key-features) • [Step-by-Step Walkthrough](#-step-by-step-visual-walkthrough) • [Tech Stack](#-technology-stack) • [Quick Start](#-quick-start)
 
 ---
 
@@ -176,35 +176,6 @@ homeease/
 ├── next.config.ts                # Turbopack & remote image patterns
 └── package.json
 ```
-
----
-
-## 🚢 Deployment to GitHub & Vercel
-
-### Step 1: Create a GitHub Repository
-1. Go to [GitHub New Repository](https://github.com/new).
-2. Name the repository: `homeease`.
-3. Choose **Public** or **Private**.
-4. Leave "Initialize this repository with a README" **unchecked** (we already have this complete repository).
-
-### Step 2: Push to GitHub
-Run the following commands in your terminal from the `C:\Users\ohmt3\homeease` folder:
-
-```bash
-# Add your GitHub repository as origin (replace Ohm1101 if using another account)
-git remote add origin https://github.com/Ohm1101/homeease.git
-
-# Set branch to main or master
-git branch -M master
-
-# Push all files, assets, and history
-git push -u origin master
-```
-
-### Step 3: Deploy to Vercel (Instant)
-1. Import your newly created `homeease` repository on [Vercel](https://vercel.com/new).
-2. Framework Preset will auto-detect **Next.js**.
-3. Click **Deploy**. Your site will be live on a custom `.vercel.app` domain with SSL, global CDN, and automatic CI/CD deployments!
 
 ---
 
