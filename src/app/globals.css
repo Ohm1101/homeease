@@ -485,3 +485,59 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 .animate-radar-pulse {
   animation: radar-pulse 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
+/* ========================================================
+   MOBILE ULTRA-SMOOTH PERFORMANCE ENGINE
+   On screens <= 768px (smartphones):
+   - Disable multi-layer GPU backdrop-blur filters that choke mobile GPUs
+   - Use high-performance semi-translucent crisp surfaces
+   - Enable hardware-accelerated momentum scrolling
+======================================================== */
+@media (max-width: 768px) {
+  html, body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Bypass heavy backdrop-filter blur passes on mobile GPUs */
+  html.light .glass-panel,
+  html.light .glass-card,
+  html.light .glass-panel-gold,
+  html.light .glass-panel-cyan,
+  html.light input,
+  html.light select,
+  html.light textarea,
+  html.light .bg-white,
+  html.light .bg-white\/95,
+  html.light .bg-white\/90,
+  html.light .bg-white\/80,
+  html.light .bg-white\/70,
+  html.light .bg-white\/60,
+  html.light .bg-white\/50,
+  html.light .bg-slate-50,
+  html.light .bg-slate-50\/70,
+  html.light .bg-slate-50\/80,
+  html.light .bg-slate-100,
+  html.light .bg-slate-100\/70,
+  html.light .bg-white\/5,
+  html.light .bg-white\/10,
+  html.light .bg-white\/15,
+  html.light .bg-white\/20,
+  html.dark .glass-panel,
+  html.dark .glass-card,
+  html.dark [class*="backdrop-blur-"],
+  [class*="backdrop-blur-"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html.light .glass-panel,
+  html.light .glass-card {
+    background: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  html.dark .glass-panel,
+  html.dark .glass-card {
+    background: rgba(12, 19, 34, 0.94) !important;
+  }
+}
+

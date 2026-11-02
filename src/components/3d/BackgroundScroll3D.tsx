@@ -38,6 +38,17 @@ export default function BackgroundScroll3D() {
       }
     })();
 
+    // Detect mobile viewport or device (smartphones & small tablets)
+    const isMobile = (() => {
+      if (typeof window === 'undefined') return false;
+      return (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
+        window.innerWidth < 768
+      );
+    })();
+    const isLowPower = isSoftwareGl || isMobile;
+
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
 
@@ -51,17 +62,22 @@ export default function BackgroundScroll3D() {
     const cameraLookAt = new THREE.Vector3(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
-      powerPreference: 'high-performance',
+      antialias: !isLowPower,
+      powerPreference: isMobile ? 'default' : 'high-performance',
       alpha: true,
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
-    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
+    // On smartphones, limit pixel ratio to 1 to reduce fragment shader fill-rate by 4x
+    renderer.setPixelRatio(isSoftwareGl ? 1 : isMobile ? 1 : Math.min(window.devicePixelRatio, 1.75));
     renderer.setSize(width, height);
-    renderer.shadowMap.enabled = !isSoftwareGl;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Disable heavy real-time depth shadow maps on mobile to save GPU passes
+    const enableShadows = !isSoftwareGl && !isMobile;
+    renderer.shadowMap.enabled = enableShadows;
+    if (enableShadows) {
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
 
     container.appendChild(renderer.domElement);
 
@@ -76,8 +92,8 @@ export default function BackgroundScroll3D() {
 
     const dirLight = new THREE.DirectionalLight(0xfff5ea, 2.5);
     dirLight.position.set(16, 26, 20);
-    dirLight.castShadow = !isSoftwareGl;
-    if (dirLight.shadow) {
+    dirLight.castShadow = enableShadows;
+    if (enableShadows && dirLight.shadow) {
       dirLight.shadow.mapSize.width = 1024;
       dirLight.shadow.mapSize.height = 1024;
       dirLight.shadow.bias = -0.0005;
@@ -109,7 +125,7 @@ export default function BackgroundScroll3D() {
       opacity: 0.55,
     });
 
-    const buildingCount = 65;
+    const buildingCount = isMobile ? 20 : 65;
     const buildingInstMesh = new THREE.InstancedMesh(buildingGeom, buildingMat, buildingCount);
     const dummy = new THREE.Object3D();
 
@@ -252,7 +268,7 @@ export default function BackgroundScroll3D() {
               return;
             }
 
-            if (!isSoftwareGl) {
+            if (enableShadows) {
               child.castShadow = true;
               child.receiveShadow = true;
             }
@@ -266,9 +282,9 @@ export default function BackgroundScroll3D() {
                 emissiveIntensity: 0.25,
                 roughness: 0.08,
                 metalness: 0.1,
-                transmission: isSoftwareGl ? 0 : 0.85,
+                transmission: isLowPower ? 0 : 0.85,
                 transparent: true,
-                opacity: isSoftwareGl ? 0.65 : 0.9,
+                opacity: isLowPower ? 0.65 : 0.9,
                 ior: 1.33,
               });
               originalMaterials.set(child, child.material);
@@ -291,13 +307,13 @@ export default function BackgroundScroll3D() {
               facadeGlassMeshes.push(child);
               child.material = new THREE.MeshPhysicalMaterial({
                 color: 0xffffff,
-                transmission: isSoftwareGl ? 0 : 0.98,
+                transmission: isLowPower ? 0 : 0.98,
                 transparent: true,
-                opacity: isSoftwareGl ? 0.04 : 0.06,
+                opacity: isLowPower ? 0.10 : 0.06,
                 roughness: 0.0,
                 metalness: 0.05,
                 ior: 1.5,
-                clearcoat: 1.0,
+                clearcoat: isMobile ? 0 : 1.0,
                 depthWrite: false,
               });
               originalMaterials.set(child, child.material);
@@ -373,45 +389,48 @@ export default function BackgroundScroll3D() {
     );
 
     // Custom 3D Living Room Suite
-    const livingRoomSuite: LivingRoomRefs = createLivingRoom3D(isSoftwareGl);
+    const livingRoomSuite: LivingRoomRefs = createLivingRoom3D(isLowPower);
     villaGroup.add(livingRoomSuite.group);
 
     // Custom 3D Kitchen Suite
-    const kitchenSuite: KitchenRefs = createKitchen3D(isSoftwareGl);
+    const kitchenSuite: KitchenRefs = createKitchen3D(isLowPower);
     villaGroup.add(kitchenSuite.group);
 
     // Custom 3D Bathroom Suite
-    const bathroomSuite: BathroomRefs = createBathroom3D(isSoftwareGl);
+    const bathroomSuite: BathroomRefs = createBathroom3D(isLowPower);
     villaGroup.add(bathroomSuite.group);
 
     // Custom 3D Master Bedroom Suite
-    const bedroomSuite: BedroomRefs = createBedroom3D(isSoftwareGl);
+    const bedroomSuite: BedroomRefs = createBedroom3D(isLowPower);
     villaGroup.add(bedroomSuite.group);
 
     // Whole-House Electrical Grid & Conduits Infrastructure
-    const wholeHouseWiring: WholeHouseWiringRefs = createWholeHouseWiring3D(isSoftwareGl);
+    const wholeHouseWiring: WholeHouseWiringRefs = createWholeHouseWiring3D(isLowPower);
     villaGroup.add(wholeHouseWiring.group);
 
-    // Warm Interior Point Lights
+    // Warm Interior Point Lights (Desktop & High-End)
     const livingRoomLight = new THREE.PointLight(0xff9944, 2.6, 9);
     livingRoomLight.position.set(-2.8, 2.0, 0.5);
-    villaGroup.add(livingRoomLight);
 
     const kitchenLight = new THREE.PointLight(0xffa550, 2.4, 9);
     kitchenLight.position.set(3.0, 2.2, 0.0);
-    villaGroup.add(kitchenLight);
 
     const bathroomLight = new THREE.PointLight(0xffedd5, 3.2, 9);
     bathroomLight.position.set(2.4, 5.5, -0.6);
-    villaGroup.add(bathroomLight);
 
     const bedroomLight = new THREE.PointLight(0xffedd5, 3.2, 9);
     bedroomLight.position.set(-2.9, 5.5, -0.6);
-    villaGroup.add(bedroomLight);
 
     const poolGlowLight = new THREE.PointLight(0x00d9ff, 1.8, 8);
     poolGlowLight.position.set(1.5, 1.2, 4.5);
-    villaGroup.add(poolGlowLight);
+
+    if (!isMobile) {
+      villaGroup.add(livingRoomLight);
+      villaGroup.add(kitchenLight);
+      villaGroup.add(bathroomLight);
+      villaGroup.add(bedroomLight);
+      villaGroup.add(poolGlowLight);
+    }
 
     // Rooftop AC Diagnostic Unit
     const acUnitGroup = new THREE.Group();
@@ -542,7 +561,7 @@ export default function BackgroundScroll3D() {
     vehicleGroup.visible = false;
 
     // Particle Swarm for Genesis & Finale
-    const particleCount = 1000;
+    const particleCount = isMobile ? 250 : 1000;
     const particlePositions = new Float32Array(particleCount * 3);
     const targetPositions = new Float32Array(particleCount * 3);
 
@@ -580,7 +599,7 @@ export default function BackgroundScroll3D() {
     particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
     const particleMat = new THREE.PointsMaterial({
       color: 0x00d9ff,
-      size: isSoftwareGl ? 0.25 : 0.18,
+      size: isLowPower ? 0.22 : 0.18,
       transparent: true,
       opacity: 0.85,
       blending: THREE.AdditiveBlending,
@@ -643,7 +662,9 @@ export default function BackgroundScroll3D() {
       camera.lookAt(cameraLookAt);
 
       // Pool water caustics glow pulse
-      poolGlowLight.intensity = 1.6 + Math.sin(clock.getElapsedTime() * 3) * 0.4;
+      if (!isMobile) {
+        poolGlowLight.intensity = 1.6 + Math.sin(clock.getElapsedTime() * 3) * 0.4;
+      }
 
       // AC fan rotor
       fanMesh.rotation.z += delta * (p >= 0.18 && p <= 0.42 ? 2 : 12);
@@ -751,7 +772,7 @@ export default function BackgroundScroll3D() {
     }
 
     function tick() {
-      const delta = Math.min(clock.getDelta(), 0.1);
+      const delta = Math.min(clock.getDelta(), 0.05);
       updateSceneState(currentScrollProgress, delta);
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(tick);
@@ -832,7 +853,7 @@ export default function BackgroundScroll3D() {
     <div
       ref={mountRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden opacity-88 dark:opacity-85 transition-opacity duration-500"
-      style={{ touchAction: 'none' }}
+
     />
   );
 }
