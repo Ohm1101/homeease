@@ -1,26 +1,487 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
+  /* Default: LIGHT THEME FIRST-CLASS */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #dbe7f2;
+    --surface: #ffffff;
+    --surface-card: #f0f5fa;
+    --primary-midnight: #dbe7f2;
+    --luxury-gold: #b48c1e;
+    --luxury-gold-light: #d4af37;
+    --electric-cyan: #0284c7;
+    --success-green: #16a34a;
+    --warning-amber: #d97706;
+    --danger-red: #dc2626;
+    --text-white: #0f172a;
+    --text-secondary: #334155;
+  }
+
+  html.dark {
+    --background: #030712;
+    --surface: #111827;
+    --surface-card: #0c1322;
+    --primary-midnight: #07111F;
+    --luxury-gold: #D4AF37;
+    --luxury-gold-light: #F6E27A;
+    --electric-cyan: #00D9FF;
+    --success-green: #00C853;
+    --warning-amber: #F59E0B;
+    --danger-red: #EF4444;
+    --text-white: #FFFFFF;
+    --text-secondary: #B0B7C3;
+  }
+
+  * {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  html.dark * {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  body {
+    background-color: transparent;
+    color: #0f172a;
+    font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    selection-background-color: #D4AF37;
+    selection-color: #ffffff;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.dark body {
+    background-color: #030712;
+    color: #FFFFFF;
+    selection-background-color: #D4AF37;
+    selection-color: #030712;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space), var(--font-sora), sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ========================================================
+   LIGHT MODE FROSTED GLASS & HIGH CONTRAST OVERRIDES
+   Very light blue, low-brightness soothing background with
+   crystal-clear, high-legibility frosted glass cards
+======================================================== */
+html.light,
+html.light body {
+  background-color: #dbe7f2 !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.05) 0%, transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(56, 189, 248, 0.04) 0%, transparent 50%),
+    linear-gradient(to bottom, #d6e4f0 0%, #e2ecf5 50%, #dbe7f2 100%) !important;
+  color: #0f172a !important;
+}
+
+html.light main {
+  background-color: transparent !important;
+  color: #0f172a !important;
+}
+
+/* Glass Panels with Soothing Translucent Frosted Glass Texture */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -2px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+  color: #0f172a !important;
+}
+
+/* Glass Cards with Perfect Text Legibility & Background Visibility */
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.74) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 1px 4px 0 rgba(15, 23, 42, 0.03) !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: #b48c1e !important;
+  box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(180, 140, 30, 0.3) !important;
+  transform: translateY(-4px);
+}
+
+/* Dark surface classes mapped to Frosted Glass */
+html.light .bg-\[\#030712\],
+html.light .bg-\[\#07111F\],
+html.light .bg-\[\#07111f\],
+html.light .bg-\[\#111827\],
+html.light .bg-\[\#0c1322\],
+html.light .bg-\[\#0a0f1d\],
+html.light .bg-\[\#050b14\],
+html.light .bg-\[\#080f1d\],
+html.light .bg-\[\#0f172a\] {
+  background: rgba(255, 255, 255, 0.76) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 8px 28px -4px rgba(15, 23, 42, 0.07) !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-\[\#030712\]\/80,
+html.light .bg-\[\#030712\]\/90,
+html.light .bg-\[\#07111F\]\/50,
+html.light .bg-\[\#07111F\]\/80,
+html.light .bg-\[\#111827\]\/80,
+html.light .bg-\[\#111827\]\/90 {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(22px) !important;
+  -webkit-backdrop-filter: blur(22px) !important;
+}
+
+/* Translucent Frosted Glass for generic white/slate containers */
+html.light .bg-white,
+html.light .bg-white\/95,
+html.light .bg-white\/90,
+html.light .bg-white\/80,
+html.light .bg-white\/70,
+html.light .bg-white\/60,
+html.light .bg-white\/50 {
+  background: rgba(255, 255, 255, 0.76) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.light .bg-slate-50,
+html.light .bg-slate-50\/70,
+html.light .bg-slate-50\/80,
+html.light .bg-slate-100,
+html.light .bg-slate-100\/70 {
+  background: rgba(245, 248, 252, 0.78) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border-color: rgba(203, 213, 225, 0.6) !important;
+}
+
+/* Subtle background chips in light mode */
+html.light .bg-white\/5,
+html.light .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(203, 213, 225, 0.6) !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-white\/15,
+html.light .bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(203, 213, 225, 0.7) !important;
+  color: #0f172a !important;
+}
+
+/* Gold and Cyan Frosted Glass Panels */
+html.light .glass-panel-gold {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(255, 255, 255, 0.6) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 10px 30px -5px rgba(212, 175, 55, 0.12) !important;
+}
+
+html.light .glass-panel-cyan {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14) 0%, rgba(255, 255, 255, 0.6) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(2, 132, 199, 0.38) !important;
+  box-shadow: 0 10px 30px -5px rgba(2, 132, 199, 0.12) !important;
+}
+
+/* Form inputs, select dropdowns & textareas */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+html.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Modal and drawer backdrops in light mode */
+html.light .bg-black\/50,
+html.light .bg-black\/60,
+html.light .bg-black\/70,
+html.light .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Text readability in light mode: deep, crisp slate for maximum contrast */
+html.light .text-white,
+html.light [class*="text-white/"],
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light [class*="text-slate-300/"],
+html.light .text-gray-100,
+html.light .text-gray-200,
+html.light .text-gray-300,
+html.light [class*="text-gray-300/"] {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-400,
+html.light .text-gray-400,
+html.light [class*="text-slate-400/"],
+html.light [class*="text-gray-400/"] {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+html.light .text-slate-500,
+html.light .text-gray-500 {
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+html.light .text-slate-600 {
+  color: #334155 !important;
+}
+
+/* Light pastel accents in dark mode converted to rich deep accents in light mode */
+html.light .text-cyan-200,
+html.light .text-cyan-300,
+html.light .text-cyan-400 {
+  color: #0284c7 !important;
+}
+
+html.light .text-amber-200,
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #b48c1e !important;
+}
+
+html.light .text-emerald-200,
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #16a34a !important;
+}
+
+/* Ensure headings in light mode are always bold and deep slate */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #0f172a !important;
+}
+
+/* Preserve crisp white text on explicitly dark background buttons */
+html.light button.bg-slate-900,
+html.light button.bg-slate-950,
+html.light button.bg-black,
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-700,
+html.light button.bg-amber-600,
+html.light button.bg-rose-600,
+html.light button.bg-rose-500,
+html.light a.bg-slate-900,
+html.light a.bg-emerald-600,
+html.light a.bg-amber-600 {
+  color: #ffffff !important;
+}
+
+html.light button.bg-slate-900 *,
+html.light button.bg-slate-950 *,
+html.light button.bg-black *,
+html.light button.bg-emerald-600 *,
+html.light button.bg-emerald-700 *,
+html.light button.bg-amber-600 *,
+html.light button.bg-rose-600 *,
+html.light button.bg-rose-500 *,
+html.light a.bg-slate-900 *,
+html.light a.bg-emerald-600 *,
+html.light a.bg-amber-600 * {
+  color: #ffffff !important;
+}
+
+/* Clean text rendering without fuzzy white shadow */
+html.light p,
+html.light span,
+html.light li,
+html.light label {
+  text-shadow: none !important;
+}
+
+/* Borders in light mode */
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/15,
+html.light .border-white\/20,
+html.light .border-white\/25,
+html.light .border-white\/30 {
+  border-color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Gradients for text in Light Mode */
+html.light .gold-gradient-text {
+  background: linear-gradient(135deg, #a16207 0%, #ca8a04 50%, #854d0e 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light .cyan-gradient-text {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 60%, #075985 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light .luxury-gradient-text {
+  background: linear-gradient(135deg, #0f172a 20%, #a16207 70%, #0284c7 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Light mode background ambient pattern - transparent to fully reveal 3D background */
+html.light .bg-mesh-pattern {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* ========================================================
+   DARK MODE GLASSMORPHISM
+======================================================= */
+html.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html.dark .glass-panel-gold {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(17, 24, 39, 0.8) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+html.dark .glass-panel-cyan {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.08) 0%, rgba(17, 24, 39, 0.8) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 217, 255, 0.25);
+}
+
+html.dark .glass-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark .glass-card:hover {
+  background: rgba(17, 24, 39, 0.85);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(212, 175, 55, 0.15);
+}
+
+html.dark .gold-gradient-text {
+  background: linear-gradient(135deg, #FFF6D1 0%, #D4AF37 50%, #AA820A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .cyan-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #00D9FF 60%, #0099FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .luxury-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 20%, #D4AF37 70%, #00D9FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .bg-mesh-pattern {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 100% 50%, rgba(0, 217, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(7, 17, 31, 0.8) 0%, transparent 60%);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.8);
+  border-radius: 9999px;
+  border: 2px solid rgba(241, 245, 249, 0.5);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #030712;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+  border: 2px solid #030712;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #D4AF37;
+}
+
+/* Radar pulse animation for Live Tracking */
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
