@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+
+const BackgroundScroll3D = dynamic(() => import('@/components/3d/BackgroundScroll3D'), {
+  ssr: false,
+});
 import { useRouter } from 'next/navigation';
 import {
   Home,
@@ -57,6 +62,9 @@ export default function CustomerLoginPage() {
 
   return (
     <main className="min-h-screen bg-[#dbe7f2] text-[#0f172a] dark:bg-[#030712] dark:text-white flex flex-col justify-between p-4 sm:p-8 relative overflow-hidden bg-mesh-pattern transition-colors duration-200">
+      {/* CONTINUOUS 3D BACKGROUND MODEL */}
+      <BackgroundScroll3D />
+
       {/* TOP HEADER WITH PROMINENT HOME BUTTON & THEME TOGGLE */}
       <header className="max-w-7xl mx-auto w-full flex items-center justify-between pb-6 border-b border-slate-300/80 dark:border-white/10 z-10">
         <div className="flex items-center gap-4">
